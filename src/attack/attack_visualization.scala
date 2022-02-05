@@ -1,8 +1,8 @@
 package attack
 
 import com.alibaba.fastjson.JSON
+import distributions.LaplaceDistribution
 import models.{Coordinate, Location, LocationProfile}
-import privacy.LaplaceDistribution
 import utils.JsonTrace
 
 import java.io.{File, PrintWriter}
@@ -20,7 +20,7 @@ object attack_visualization {
     val locProfile = new LocationProfile(trace).locations
     val top1 = locProfile(0)
     val b = 200 / log(2)
-    val distr = new LaplaceDistribution(b)
+    val distr = LaplaceDistribution.sample(b)
 
     val l = log(2)
     val r = 200

@@ -1,17 +1,9 @@
+import distributions.LaplaceDistribution
 import models.{Checkin, Coordinate, Location, cluster}
-import org.apache.commons.math3.distribution.{GammaDistribution, UniformRealDistribution}
-
-import scala.collection.mutable.ListBuffer
-import scala.math.{Pi, cos, sin}
 
 package object attack {
   def obfuscate(point: Checkin, scale: Double): Checkin = {
-    val gamma = new GammaDistribution(2, scale)
-    val random_radius = gamma.sample()
-    val uniform = new UniformRealDistribution(0, 2)
-    val random_angle = uniform.sample() * Pi
-    val x = random_radius * cos(random_angle)
-    val y = random_radius * sin(random_angle)
+    val (x, y) = LaplaceDistribution.sample(scale)
     val obfuscated = privacy.obfuscate(point, x, y)
     return Checkin(obfuscated.latitude, obfuscated.longitude, point.timestamp)
   }

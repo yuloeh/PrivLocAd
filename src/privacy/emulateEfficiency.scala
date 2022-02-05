@@ -1,5 +1,7 @@
 package privacy
 
+import distributions.NormalDistribution
+
 import java.io.{FileWriter, PrintWriter}
 import java.text.SimpleDateFormat
 import scala.math.{random, sqrt}

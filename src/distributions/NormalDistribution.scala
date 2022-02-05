@@ -1,7 +1,6 @@
-package privacy
+package distributions
 
-import scala.math.{Pi, cos, exp, log, random, sin, sqrt}
-import scala.util.Random
+import scala.math._
 
 class NormalDistribution(val sigma: Double) {
   def density(x: Double, y: Double): Double = exp(-(x * x + y * y) / (2 * sigma * sigma)) / (2 * Pi * sigma * sigma)
@@ -59,11 +58,13 @@ class NormalDistribution(val sigma: Double) {
     return (z1 + z2) * dx * dy / 2
   }
 
-  def sample: (Double, Double) = {
+  def sample: (Double, Double) = NormalDistribution.sample(sigma)
+}
+
+object NormalDistribution {
+  def sample(sigma: Double): (Double, Double) = {
     val r = sigma * sqrt(-2 * log(1 - random()))
     val theta = 2 * Pi * random()
-    val x = r * cos(theta)
-    val y = r * sin(theta)
-    (x, y)
+    (r * cos(theta), r * sin(theta))
   }
 }

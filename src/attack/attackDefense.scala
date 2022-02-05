@@ -2,8 +2,9 @@ package attack
 
 import java.io.{FileWriter, PrintWriter}
 import com.alibaba.fastjson.{JSON, JSONObject}
+import distributions.NormalDistribution
 import models.{Checkin, Coordinate, LocationProfile, LocationProfileExt}
-import privacy.{NormalDistribution, ln_100, ln_20}
+import privacy.{ln_100, ln_20}
 import utils.{ErrorLog, JsonTrace, TraceBuffer}
 
 import java.text.SimpleDateFormat
