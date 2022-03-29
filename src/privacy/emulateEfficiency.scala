@@ -4,7 +4,7 @@ import distributions.NormalDistribution
 
 import java.io.{FileWriter, PrintWriter}
 import java.text.SimpleDateFormat
-import scala.math.{random, sqrt}
+import scala.math.{Pi, cos, random, sin, sqrt}
 
 object emulateEfficiency {
   val tryNum = 100000
@@ -32,58 +32,92 @@ object emulateEfficiency {
 }
 
 class emulateEfficiency(baseTryNum: Int, sampleSize: Int, R: Int, epsilon: Double, r_ind: Int) extends Runnable {
-  def sigma(k: Int): Double = sqrt(k * (2 * ln_20 + epsilon)) * r_ind / epsilon
+  def sigma(k: Int): Double = sqrt(k * (2 * ln_100 + epsilon)) * r_ind / epsilon
+
+  val rate_1_0: Array[Double] = r_ind match {
+    case 500 => Array(0,0.2,0.2,0.5,0.6,0.7,0.8,0.9,0.9,1.0)
+    case 600 => Array(0,0.4,0.6,0.8,0.9,0.9,1.1,1.2,1.2,1.2)
+    case 700 => Array(0,0.8,1.0,1.0,1.1,1.2,1.2,1.3,1.4,1.3)
+    case 800 => Array(0,0.8,1.0,1.1,1.3,1.3,1.4,1.4,1.5,1.6)
+    case 900 => Array(0,1.0,1.2,1.3,1.4,1.4,1.6,1.6,1.6,1.7)
+    case 1000 => Array(0,1.2,1.3,1.5,1.5,1.6,1.7,1.8,1.8,1.8)
+  }
+
+  val rate_1_5: Array[Double] = r_ind match {
+    case 500 => Array(0,0.0,0.1,0.0,0.0,0.3,0.1,0.4,0.3,0.6)
+    case 600 => Array(0,0.2,0.1,0.2,0.4,0.4,0.6,0.7,0.6,0.8)
+    case 700 => Array(0,0.3,0.1,0.4,0.5,0.8,0.7,0.9,0.9,0.9)
+    case 800 => Array(0,0.4,0.4,0.7,0.7,0.8,0.9,1.0,1.1,1.1)
+    case 900 => Array(0,0.6,0.8,0.7,0.9,0.9,1.0,1.2,1.2,1.3)
+    case 1000 => Array(0,0.7,0.9,0.9,1.2,1.1,1.3,1.3,1.4,1.4)
+  }
+
+  val rate: Array[Double] = rate_1_0
 
   override def run(): Unit = {
-    val writer = new PrintWriter(new FileWriter("R=%d-efficacy-epsilon=%.1f-r=%d.csv".format(R, epsilon, r_ind)))
+//    val writer = new PrintWriter(new FileWriter("R=%d-efficacy-epsilon=%.1f-r=%d-opt2stage-balance.csv".format(R, epsilon, r_ind)))
+    val writer1 = new PrintWriter(new FileWriter("R=%d-efficacy-epsilon=%.1f-r=%d-40-area.csv".format(R, epsilon, r_ind)))
 //    val distributions = for (k <- Array.range(1, 11)) yield {
 //      new NormalDistribution(sigma(k))
 //    }
-    for (k <- 1 to 10) {
-      val tryNum = k * baseTryNum
-      val distribution = new NormalDistribution(sigma(k))
+    for (k <- 40 to 41) {
+      val tryNum = baseTryNum
+//      val lambda = rate(k - 1)
+      val lambda = 2.2
+      val distr0 = new NormalDistribution(sigma(1) * lambda / sqrt(lambda * lambda + 1))
+      val distr1 = new NormalDistribution(sigma(k) / sqrt(lambda * lambda + 1))
       for (w <- 0 until tryNum) {
         if (w % (tryNum / 100) == 0) {
           val current = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(System.currentTimeMillis())
           println(current)
           println("efficacy-R=%d-eps=%.1f-r=%d, k=%d: %d%%".format(R, epsilon, r_ind, k, w * 100 / tryNum))
         }
+
+        val point = distr0.sample
         val dummies = for (i <- Array.range(0, k)) yield {
-          distribution.sample
+          val (x, y) = distr1.sample
+          (x + point._1, y + point._2)
         }
-        val minX = dummies.map(dummy => dummy._1).min - R
-        val maxX = dummies.map(dummy => dummy._1).max + R
-        val minY = dummies.map(dummy => dummy._2).min - R
-        val maxY = dummies.map(dummy => dummy._2).max + R
+
+        val minX = dummies.map(dummy => dummy._1).min - R/2
+        val maxX = dummies.map(dummy => dummy._1).max + R/2
+        val minY = dummies.map(dummy => dummy._2).min - R/2
+        val maxY = dummies.map(dummy => dummy._2).max + R/2
         val meanX = dummies.map(dummy => dummy._1).sum / dummies.length
         val meanY = dummies.map(dummy => dummy._2).sum / dummies.length
         val post_distribution = new NormalDistribution(sigma(1))
         val pdf = dummies.map(dummy => post_distribution.density(dummy._1 - meanX, dummy._2 - meanY))
         val sum = pdf.sum
-        val prob = pdf.map(p => p / sum)
+        val alpha = 0.00000001
+//        val prob = pdf.map(p => (p + alpha) / (sum + k * alpha))
+        val prob = pdf.map(p => 1.0 / k)
 
+        var count = 0
         var total = 0.0
         var effect = 0.0
-        for (i <- 0 until sampleSize) {
-          val deltaX = maxX - minX
-          val deltaY = maxY - minY
+        val deltaX = maxX - minX
+        val deltaY = maxY - minY
+        for (i <- 0 until sampleSize/10) {
           val x = random() * deltaX + minX
           val y = random() * deltaY + minY
           var possibility = 0.0
           for (j <- dummies.indices) {
-            if ((dummies(j)._1 - x) * (dummies(j)._1 - x) + (dummies(j)._2 - y) * (dummies(j)._2 - y) <= R * R) {
+            if ((dummies(j)._1 - x) * (dummies(j)._1 - x) + (dummies(j)._2 - y) * (dummies(j)._2 - y) <= R * R / 4) {
               possibility += prob(j)
             }
           }
-          total += possibility
-          if (possibility != 0.0 && x * x + y * y <= R * R) {
-            effect += possibility
+          if (possibility != 0.0) {
+            count += 1
+            total += possibility
+            if (x * x + y * y <= R * R) effect += possibility
           }
         }
         //println(total, effect)
-        writer.println("%d,%f".format(k, effect / total))
+//        writer.println("%d,%f".format(k, effect / total))
+        writer1.println("%d,%f".format(k, count.toDouble / (sampleSize/10) * deltaX * deltaY))
       }
     }
-    writer.close()
+//    writer.close()
+    writer1.close()
   }
 }

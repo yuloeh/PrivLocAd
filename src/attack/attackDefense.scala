@@ -2,10 +2,11 @@ package attack
 
 import java.io.{FileWriter, PrintWriter}
 import com.alibaba.fastjson.{JSON, JSONObject}
+import dataset.TraceBuffer
 import distributions.NormalDistribution
-import models.{Checkin, Coordinate, LocationProfile, LocationProfileExt}
+import models.{SpaceTime, Coordinate, LocationProfile, LocationProfileExt}
 import privacy.{ln_100, ln_20}
-import utils.{ErrorLog, JsonTrace, TraceBuffer}
+import utils.{ErrorLog, JsonTrace}
 
 import java.text.SimpleDateFormat
 import scala.collection.mutable.ListBuffer
@@ -21,14 +22,10 @@ class attackDefense(buffer: TraceBuffer, id: Int) extends Runnable {
   val r_ind = 500
   private def sigma(k: Int, epsilon: Double) = sqrt(k * (2 * ln_100 + epsilon)) * r_ind / epsilon
 
-  private def obfuscate(point: Coordinate, distribution: NormalDistribution): Array[Checkin] = {
-    val listBuffer = new ListBuffer[Checkin]
-    for (i <- 0 until 10) {
-      val (x, y) = distribution.sample
-      val obfuscated = privacy.obfuscate(point, x, y)
-      listBuffer += Checkin(obfuscated.latitude, obfuscated.longitude, 0)
-    }
-    return listBuffer.toArray
+  private def obfuscate(point: Coordinate, distribution: NormalDistribution): Array[SpaceTime] = for (t <- Array.range(0, 10)) yield {
+    val (x, y) = distribution.sample
+    val obfuscated = privacy.obfuscate(point, x, y)
+    SpaceTime(obfuscated.latitude, obfuscated.longitude, 0)
   }
 
   override def run(): Unit = {
@@ -69,19 +66,19 @@ class attackDefense(buffer: TraceBuffer, id: Int) extends Runnable {
               if (x.location == locations(0)) {
 //                println("yes")
                 val obs = top1obfus(Random.nextInt(10))
-                Checkin(obs.latitude, obs.longitude, x.timestamp)
+                SpaceTime(obs.latitude, obs.longitude, x.timestamp)
               } else if (x.location == locations(1)) {
 //                println("yes")
                 val obs = top2obfus(Random.nextInt(10))
-                Checkin(obs.latitude, obs.longitude, x.timestamp)
-              } else Checkin(x.latitude, x.longitude, x.timestamp)
+                SpaceTime(obs.latitude, obs.longitude, x.timestamp)
+              } else SpaceTime(x.latitude, x.longitude, x.timestamp)
             )
             val clusterRad = sqrt(2 * ln_20) * Sigma
 
             val top = deobfuscate(obfTrace, clusterRad)
             val dist = locations(0).distance(top)
 
-            val remTrace = obfTrace.filter(p => !top.checkins.map(_.asInstanceOf[Checkin]).contains(p))
+            val remTrace = obfTrace.filter(p => !top.checkins.map(_.asInstanceOf[SpaceTime]).contains(p))
             if (remTrace.length == 0) {
               writer.print(",%f,NULL,%f,0".format(dist, dist))
             }

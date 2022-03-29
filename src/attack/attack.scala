@@ -2,8 +2,9 @@ package attack
 
 import java.io.{FileWriter, PrintWriter}
 import com.alibaba.fastjson.{JSON, JSONObject}
-import models.{LocationProfile, LocationProfileExt, Checkin}
-import utils.{ErrorLog, JsonTrace, TraceBuffer, quickSort}
+import dataset.TraceBuffer
+import models.{SpaceTime, LocationProfile, LocationProfileExt}
+import utils.{ErrorLog, JsonTrace, quickSort}
 
 import java.text.SimpleDateFormat
 import scala.collection.mutable.ListBuffer
@@ -97,7 +98,7 @@ class attack(buffer: TraceBuffer, id: Int) extends Runnable {
             val top = deobfuscate(obfTrace, clusterRad)
             val dist = locations(0).distance(top)
 
-            val remTrace = obfTrace.filter(p => !top.checkins.map(_.asInstanceOf[Checkin]).contains(p))
+            val remTrace = obfTrace.filter(p => !top.checkins.map(_.asInstanceOf[SpaceTime]).contains(p))
             if (remTrace.length == 0) {
               writer.print(",%f,NULL,%f,0".format(dist, dist))
             }

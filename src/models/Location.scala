@@ -1,5 +1,5 @@
 package models
 
-class Location(lat: Double, lon: Double, clusteredCheckins: Array[Checkin]) extends Coordinate(lat, lon) {
-  val checkins : Array[SpaceTime] = clusteredCheckins.map(_.SpaceTime(this))
+class Location(lat: Double, lon: Double, clusteredCheckins: Array[SpaceTime]) extends Coordinate(lat, lon) {
+  val checkins : Array[Checkin] = clusteredCheckins.map(_.Checkin(this))
 }

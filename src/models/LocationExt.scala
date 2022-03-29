@@ -1,9 +1,9 @@
 package models
 
-class LocationExt(lat: Double, lon: Double, clusteredCheckins: Array[Checkin], p_timeSpan: Int) extends Location(lat, lon, clusteredCheckins) {
+class LocationExt(lat: Double, lon: Double, clusteredCheckins: Array[SpaceTime], p_timeSpan: Int) extends Location(lat, lon, clusteredCheckins) {
   private var _timeSpan: Int = p_timeSpan
 
-  private[models] def this(lat: Double, lon: Double, clusteredCheckins: Array[Checkin]) {
+  private[models] def this(lat: Double, lon: Double, clusteredCheckins: Array[SpaceTime]) {
     this(lat, lon, clusteredCheckins, 0)
   }
 

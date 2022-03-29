@@ -1,9 +1,11 @@
 package models
 
-class Checkin private[models](lat: Double, lon: Double, val timestamp: Int) extends Coordinate(lat, lon) {
-  def SpaceTime(location: Location): SpaceTime = {
-    val spaceTime = this.asInstanceOf[SpaceTime]
-    spaceTime._actual = location
-    return spaceTime
+class Checkin(lat: Double, lon: Double, timestamp: Int, centroid: Location) extends SpaceTime(lat, lon, timestamp) {
+  // allow partial initiation
+  private[models] def this(lat: Double, lon: Double, timestamp: Int) {
+    this(lat, lon, timestamp, null)
   }
+
+  private[models] var _actual: Location = centroid
+  def location: Location = _actual
 }

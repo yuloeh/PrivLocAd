@@ -5,7 +5,7 @@ import utils.quickSort
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.math.min
 
-class LocationProfileExt(rawTrace: Array[Checkin]) extends Profile {
+class LocationProfileExt(rawTrace: Array[SpaceTime]) extends Profile {
 
   private val maxTimeInterval = 2 * 60 // default active time 10 minutes
 
@@ -13,7 +13,7 @@ class LocationProfileExt(rawTrace: Array[Checkin]) extends Profile {
     val clusters = new ListBuffer[Cluster]
 
     for (point <- rawTrace) {
-      val nearby = clusters.filter((x: Cluster) => x.exists((y: Checkin) => point.distance(y) < connectivity))
+      val nearby = clusters.filter((x: Cluster) => x.exists((y: SpaceTime) => point.distance(y) < connectivity))
       if (nearby.isEmpty)
         clusters += new Cluster(point)
       else {
@@ -31,7 +31,7 @@ class LocationProfileExt(rawTrace: Array[Checkin]) extends Profile {
       val longitude = cluster.map(_.longitude).sum / cluster.length
       new LocationExt(latitude, longitude, cluster)
     }
-    val convertedTrace = rawTrace.map(x => x.asInstanceOf[SpaceTime])
+    val convertedTrace = rawTrace.map(x => x.asInstanceOf[Checkin])
 
     var prev = convertedTrace(0)
     val prev_loc = prev.location.asInstanceOf[LocationExt]

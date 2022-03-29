@@ -1,4 +1,4 @@
-package utils
+package dataset
 
 class TraceBuffer(size: Int) {
   private val traceData = new Array[String](size)

@@ -3,14 +3,14 @@ import utils.quickSort
 import scala.collection.mutable.ListBuffer
 
 package object models {
-  def Checkin(lat: Double, lon: Double, timestamp: Int): Checkin =
-    new SpaceTime(lat, lon, timestamp).asInstanceOf[Checkin]
+  def SpaceTime(lat: Double, lon: Double, timestamp: Int): SpaceTime =
+    new Checkin(lat, lon, timestamp).asInstanceOf[SpaceTime]
 
-  def cluster(trace: Array[Checkin], distThr: Double): Array[Location] = {
-    val clusters = new ListBuffer[ListBuffer[Checkin]]
+  def cluster(trace: Array[SpaceTime], distThr: Double): Array[Location] = {
+    val clusters = new ListBuffer[ListBuffer[SpaceTime]]
 
     for (point <- trace) {
-      val nearby = clusters.filter((x: ListBuffer[Checkin]) => x.exists((y: Checkin) => point.distance(y) < distThr))
+      val nearby = clusters.filter((x: ListBuffer[SpaceTime]) => x.exists((y: SpaceTime) => point.distance(y) < distThr))
       if (nearby.isEmpty) {
         clusters += ListBuffer(point)
       }
